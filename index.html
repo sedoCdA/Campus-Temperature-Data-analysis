@@ -1,115 +1,803 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoolCampus - IITGN Thermal Dashboard</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans)}
-.tabs{display:flex;gap:8px;margin-bottom:20px}
-.tab{padding:8px 18px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary)}
-.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
-.panel{display:none}.panel.active{display:block}
-.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px}
-.metric .label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
-.metric .val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
-.metric .sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
-.heatmap-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:14px}
-.cell{border-radius:5px;padding:6px 4px;text-align:center;cursor:pointer;transition:transform 0.1s}
-.cell:hover{transform:scale(1.08)}
-.cell .cname{font-size:9px;font-weight:500;line-height:1.2}
-.cell .ctemp{font-size:12px;font-weight:500;margin-top:2px}
-.legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-secondary);margin-bottom:20px}
-.leg-bar{display:flex;height:10px;border-radius:3px;overflow:hidden;width:120px}
-.leg-seg{flex:1}
-.tooltip{position:fixed;background:var(--color-background-primary);border:0.5px solid var(--color-border-primary);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;pointer-events:none;display:none;z-index:99;max-width:180px;box-shadow:none}
-.ac-table{width:100%;border-collapse:collapse;font-size:12px}
-.ac-table th{text-align:left;padding:8px 10px;font-size:11px;color:var(--color-text-secondary);font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary)}
-.ac-table td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500}
-.badge-hot{background:#FAECE7;color:#993C1D}
-.badge-cool{background:#E1F5EE;color:#0F6E56}
-.badge-ok{background:#EAF3DE;color:#3B6D11}
-.badge-warn{background:#FAEEDA;color:#854F0B}
-.badge-off{background:#F1EFE8;color:#5F5E5A}
-.rec-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-top:16px}
-.rec-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px}
-.rec-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
-.rec-item:last-child{border-bottom:none}
-.rec-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
-.dot-save{background:#1D9E75}.dot-warn{background:#EF9F27}.dot-hot{background:#D85A30}
-.savings-bar{height:8px;background:var(--color-border-tertiary);border-radius:4px;margin-top:6px}
-.savings-fill{height:8px;background:#1D9E75;border-radius:4px;transition:width 1s}
-.time-row{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-.time-row label{font-size:12px;color:var(--color-text-secondary)}
-.clock{font-size:18px;font-weight:500;color:var(--color-text-primary);font-family:var(--font-mono);min-width:52px}
+  @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&display=swap');
+
+  :root {
+    --green-dark:    #1A3D2B;
+    --green-mid:     #2A5C40;
+    --green-light:   #3D7A58;
+    --green-accent:  #2A6044;
+    --cream-bg:      #F4EFE4;
+    --cream-card:    #FFFDF8;
+    --cream-mid:     #EAE3D2;
+    --cream-border:  #D6CCBA;
+    --rust:          #B85C2C;
+    --rust-light:    #D4743A;
+    --amber:         #C98A10;
+    --text-dark:     #1A2E20;
+    --text-mid:      #3B5246;
+    --text-muted:    #6B8070;
+    --white:         #FFFFFF;
+    --shadow:        0 2px 12px rgba(42,92,64,0.10);
+    --shadow-md:     0 4px 20px rgba(42,92,64,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Calibri', 'Trebuchet MS', sans-serif;
+    background: var(--cream-bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ---- HEADER ---- */
+  .site-header {
+    background: var(--green-dark);
+    border-bottom: 3px solid var(--green-light);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 3px 16px rgba(26,61,43,0.25);
+  }
+  .site-logo { display: flex; align-items: center; gap: 12px; }
+  .logo-leaf { font-size: 28px; line-height: 1; }
+  .logo-text {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #FFFDF8;
+    letter-spacing: -0.3px;
+  }
+  .logo-sub {
+    font-size: 13px;
+    color: rgba(255,253,248,0.65);
+    letter-spacing: 0.3px;
+  }
+  .header-badge {
+    background: var(--rust);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ---- INSIGHT BANNER ---- */
+  .insight-banner {
+    background: linear-gradient(90deg, var(--rust) 0%, var(--rust-light) 100%);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .insight-icon { font-size: 18px; }
+
+  /* ---- MAIN WRAP ---- */
+  .main-wrap {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+  }
+
+  /* ---- TABS ---- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 0;
+    border-bottom: 2px solid var(--cream-border);
+  }
+  .tab {
+    padding: 11px 26px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-size: 15px;
+    font-family: 'Calibri', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    position: relative;
+    bottom: -2px;
+  }
+  .tab.active {
+    background: var(--cream-card);
+    color: var(--green-dark);
+    border-color: var(--cream-border);
+    border-bottom: 2px solid var(--cream-card);
+  }
+  .tab:hover:not(.active) { color: var(--green-dark); background: rgba(255,255,255,0.5); }
+
+  /* ---- PAGE HEADER ---- */
+  .page-header {
+    background: var(--green-dark);
+    border-radius: 0 0 14px 14px;
+    padding: 18px 24px 16px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+  }
+  .page-header h1, .page-header h2 {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 21px;
+    font-weight: 700;
+    color: #FFFDF8;
+    margin-bottom: 7px;
+  }
+  .page-header p {
+    font-size: 15px;
+    color: rgba(255,253,248,0.72);
+    line-height: 1.6;
+  }
+  .page-header p strong { color: #F5C97A; }
+
+  /* ---- PANEL ---- */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ---- METRIC CARDS ---- */
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .metric {
+    background: var(--cream-card);
+    border: 1px solid var(--cream-border);
+    border-left: 4px solid var(--green-accent);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s;
+  }
+  .metric:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .metric .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .metric .val {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--green-dark);
+    line-height: 1.1;
+  }
+  .metric .sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
+  .metric.hot .val { color: #B84020; }
+  .metric.hot { border-left-color: #B84020; }
+  .metric.warn .val { color: var(--amber); }
+  .metric.warn { border-left-color: var(--amber); }
+
+  /* ---- HEATMAP ---- */
+  .heatmap-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+  .leg-bar {
+    display: flex;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    width: 140px;
+    border: 1px solid var(--cream-border);
+  }
+  .leg-seg { flex: 1; }
+  .refresh-btn {
+    background: var(--green-dark);
+    color: var(--white);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Calibri', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .refresh-btn:hover { background: var(--green-mid); }
+
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .cell {
+    border-radius: 8px;
+    padding: 12px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .cell:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    z-index: 2;
+    position: relative;
+  }
+  .cell .cname {
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .cell .ctemp {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .heatmap-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* ---- TOOLTIP ---- */
+  .tooltip {
+    position: fixed;
+    background: var(--green-dark);
+    color: #FFFDF8;
+    border: 1px solid var(--green-light);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    pointer-events: none;
+    display: none;
+    z-index: 999;
+    max-width: 200px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    line-height: 1.8;
+  }
+
+  /* ---- AC SCHEDULER ---- */
+  .time-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: var(--cream-card);
+    border: 1px solid var(--cream-border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    box-shadow: var(--shadow);
+  }
+  .time-row label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .clock {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--green-dark);
+    font-family: 'Courier New', monospace;
+    min-width: 70px;
+  }
+  input[type=range] {
+    flex: 1;
+    max-width: 220px;
+    accent-color: var(--green-accent);
+    height: 6px;
+  }
+  .time-label-pill {
+    background: var(--green-dark);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 12px;
+  }
+
+  /* ---- AC TABLE ---- */
+  .table-wrap {
+    background: var(--cream-card);
+    border: 1px solid var(--cream-border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .ac-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .ac-table th {
+    text-align: left;
+    padding: 13px 16px;
+    font-size: 12px;
+    color: #FFFDF8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    background: var(--green-dark);
+    border-bottom: 2px solid var(--green-light);
+  }
+  .ac-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--cream-mid);
+    color: var(--text-dark);
+    font-size: 14px;
+  }
+  .ac-table tr:last-child td { border-bottom: none; }
+  .ac-table tr:nth-child(even) td { background: rgba(244,239,228,0.5); }
+  .ac-table tr:hover td { background: #EBF5EF; }
+
+  /* ---- BADGES ---- */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .badge-hot   { background: #FAEBE5; color: #A03010; border: 1px solid #E8A090; }
+  .badge-cool  { background: #E2F3EB; color: #1A5C35; border: 1px solid #8FCFAA; }
+  .badge-ok    { background: #EAF5EE; color: #1E6B3A; border: 1px solid #90CFA8; }
+  .badge-warn  { background: #FDF3DC; color: #8A5A00; border: 1px solid #E0B855; }
+  .badge-off   { background: var(--cream-mid); color: var(--text-muted); border: 1px solid var(--cream-border); }
+
+  /* ---- INSIGHTS BOX ---- */
+  .rec-box {
+    background: var(--cream-card);
+    border: 1px solid var(--cream-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+  }
+  .rec-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+  }
+  .rec-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--cream-mid);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dark);
+  }
+  .rec-item:last-child { border-bottom: none; }
+  .rec-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .dot-save { background: #2A8C58; }
+  .dot-warn { background: var(--amber); }
+  .dot-hot  { background: #C03820; }
+
+  /* ---- SCORE BAR ---- */
+  .score-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--cream-mid); }
+  .score-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+  .score-row .s-label { color: var(--text-muted); font-weight: 600; }
+  .score-row .s-val { font-weight: 700; color: var(--green-dark); font-size: 18px; }
+  .savings-bar { height: 10px; background: var(--cream-mid); border-radius: 5px; }
+  .savings-fill {
+    height: 10px;
+    background: linear-gradient(90deg, var(--green-accent), #4CAF7D);
+    border-radius: 5px;
+    transition: width 0.8s ease;
+  }
+
+  /* ---- 24HR CHART ---- */
+  .chart-section {
+    background: var(--cream-card);
+    border: 1px solid var(--cream-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 14px;
+  }
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 140px;
+    padding: 0 2px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-col {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    cursor: pointer;
+  }
+  .bar-col .bar {
+    position: absolute;
+    bottom: 18px;
+    left: 0;
+    right: 0;
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+    transition: opacity 0.2s;
+    max-height: calc(100% - 20px);
+  }
+  .bar-col:hover .bar { opacity: 0.75; }
+  .bar-col.peak .bar    { background: #C84030; }
+  .bar-col.normal .bar  { background: var(--green-accent); }
+  .bar-col.low .bar     { background: #A8C8B8; }
+  .bar-col .bar-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    height: 16px;
+    line-height: 16px;
+  }
+  .bar-col.current-hour .bar { outline: 2px solid var(--amber); outline-offset: 1px; }
+  .chart-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .chart-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ---- DAY SUMMARY ---- */
+  .day-summary {
+    background: var(--green-dark);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 0;
+    box-shadow: var(--shadow-md);
+  }
+  .day-summary-title {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFFDF8;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .day-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .day-stat {
+    text-align: center;
+    padding: 14px 10px;
+    background: rgba(255,253,248,0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(255,253,248,0.15);
+  }
+  .day-stat .ds-val {
+    font-size: 26px;
+    font-weight: 700;
+    color: #FFFDF8;
+    display: block;
+  }
+  .day-stat .ds-val.warn { color: #F5C97A; }
+  .day-stat .ds-val.hot  { color: #FF9070; }
+  .day-stat .ds-label {
+    font-size: 12px;
+    color: rgba(255,253,248,0.6);
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+
+  /* ============ MOBILE RESPONSIVE ============ */
+  @media (max-width: 900px) {
+    .site-header { padding: 12px 16px; }
+    .logo-text { font-size: 20px; }
+    .logo-sub { display: none; }
+    .insight-banner { padding: 9px 16px; font-size: 13px; }
+    .main-wrap { padding: 14px 12px 36px; }
+
+    .tabs { gap: 2px; }
+    .tab { padding: 9px 14px; font-size: 13px; }
+
+    .page-header { padding: 14px 16px 12px; }
+    .page-header h1, .page-header h2 { font-size: 17px !important; }
+    .page-header p { font-size: 13px; }
+
+    .metric-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .metric .val { font-size: 26px; }
+
+    .heatmap-grid {
+      grid-template-columns: repeat(5, 1fr) !important;
+    }
+    .cell { min-height: 60px; padding: 8px 4px; }
+    .cell .ctemp { font-size: 13px; }
+    .cell .cname { font-size: 9px; }
+
+    .time-row { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+    .clock { font-size: 22px; min-width: 60px; }
+    input[type=range] { max-width: 100%; flex-basis: 100%; order: 3; }
+    .time-label-pill { order: 4; }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .ac-table { min-width: 600px; font-size: 13px; }
+    .ac-table th { font-size: 11px; padding: 10px 12px; }
+    .ac-table td { padding: 9px 12px; }
+
+    .day-stats { grid-template-columns: repeat(2, 1fr); }
+    .day-stat .ds-val { font-size: 22px; }
+
+    .chart-legend { flex-wrap: wrap; gap: 10px; }
+
+    .rec-box { padding: 14px 14px; }
+    .rec-item { font-size: 13px; }
+  }
+
+  @media (max-width: 540px) {
+    .logo-text { font-size: 18px; }
+    .header-badge { font-size: 11px; padding: 4px 10px; }
+
+    .metric-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .metric { padding: 12px 12px; }
+    .metric .val { font-size: 22px; }
+    .metric .label { font-size: 11px; }
+
+    .heatmap-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px; }
+    .cell { min-height: 52px; }
+    .cell .ctemp { font-size: 12px; }
+
+    .page-header h1, .page-header h2 { font-size: 15px !important; }
+
+    .day-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .day-stat .ds-val { font-size: 19px; }
+    .day-stat .ds-label { font-size: 11px; }
+    .day-summary { padding: 16px 14px; }
+    .day-summary-title { font-size: 14px; }
+
+    .tabs { overflow-x: auto; white-space: nowrap; }
+    .tab { font-size: 12px; padding: 8px 12px; }
+  }
+
 </style>
+</head>
+<body>
 
-<div style="padding:1rem 0">
-<div class="tabs">
-  <button class="tab active" onclick="switchTab('heatmap')">Thermal heatmap</button>
-  <button class="tab" onclick="switchTab('ac')">Smart AC scheduler</button>
-</div>
-
-<div id="panel-heatmap" class="panel active">
-  <div class="metric-row">
-    <div class="metric"><div class="label">Avg campus temp</div><div class="val" id="avg-temp">29.1°C</div><div class="sub">Measured now</div></div>
-    <div class="metric"><div class="label">Coolest zone</div><div class="val" id="cool-zone">AB-8</div><div class="sub" id="cool-val">26.1°C — near trees</div></div>
-    <div class="metric"><div class="label">Hottest zone</div><div class="val" id="hot-zone">H3 Top</div><div class="sub" id="hot-val">31.4°C — no shade</div></div>
-    <div class="metric"><div class="label">Active sensors</div><div class="val">74</div><div class="sub">All online</div></div>
-  </div>
-
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-    <div class="legend">
-      <span>Cool</span>
-      <div class="leg-bar">
-        <div class="leg-seg" style="background:#5DCAA5"></div>
-        <div class="leg-seg" style="background:#97C459"></div>
-        <div class="leg-seg" style="background:#EF9F27"></div>
-        <div class="leg-seg" style="background:#D85A30"></div>
-        <div class="leg-seg" style="background:#A32D2D"></div>
-      </div>
-      <span>Hot</span>
-    </div>
-    <button onclick="simulateTick()" style="font-size:11px;padding:5px 12px">Refresh readings</button>
-  </div>
-
-  <div class="heatmap-grid" id="heatmap-grid"></div>
-
-  <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px">Click any zone to see details &nbsp;·&nbsp; Tree-shaded zones shown with leaf indicator</div>
-</div>
-
-<div id="panel-ac" class="panel">
-  <div class="time-row">
-    <label>Simulated time</label>
-    <span class="clock" id="sim-clock">10:00</span>
-    <input type="range" min="6" max="23" step="0.25" value="10" id="time-slider" style="flex:1;max-width:200px" oninput="updateTime(this.value)">
-    <span style="font-size:11px;color:var(--color-text-tertiary)" id="time-label">Morning lecture</span>
-  </div>
-  <div class="metric-row">
-    <div class="metric"><div class="label">ACs running</div><div class="val" id="ac-running">12</div><div class="sub">of 18 total</div></div>
-    <div class="metric"><div class="label">Empty rooms w/ AC on</div><div class="val" id="ac-waste">3</div><div class="sub" id="ac-waste-sub">Wasted cooling</div></div>
-    <div class="metric"><div class="label">Est. energy waste</div><div class="val" id="energy-waste">4.2 kWh</div><div class="sub">This hour</div></div>
-    <div class="metric"><div class="label">Daily savings potential</div><div class="val" id="daily-save">₹820</div><div class="sub">If optimised</div></div>
-  </div>
-
-  <table class="ac-table">
-    <thead><tr>
-      <th>Zone</th><th>Temp</th><th>Occupancy</th><th>AC status</th><th>AI recommendation</th>
-    </tr></thead>
-    <tbody id="ac-tbody"></tbody>
-  </table>
-
-  <div class="rec-box">
-    <div class="rec-title">AI insights for current time</div>
-    <div id="rec-list"></div>
-    <div style="margin-top:14px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
-        <span style="color:var(--color-text-secondary)">Today's optimisation score</span>
-        <span style="font-weight:500" id="score-label">67%</span>
-      </div>
-      <div class="savings-bar"><div class="savings-fill" id="score-bar" style="width:67%"></div></div>
+<!-- SITE HEADER -->
+<header class="site-header">
+  <div class="site-logo">
+    <span class="logo-leaf">🌿</span>
+    <div>
+      <div class="logo-text">CoolCampus</div>
+      <div class="logo-sub">Reimagining Thermal Comfort at IITGN</div>
     </div>
   </div>
+  <span class="header-badge">Live Sensor Data</span>
+</header>
+
+<!-- INSIGHT BANNER -->
+<div class="insight-banner" id="insight-banner">
+  <span class="insight-icon">⚡</span>
+  <span id="insight-text">Loading campus data...</span>
 </div>
-</div>
+
+<!-- MAIN -->
+<div class="main-wrap">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('heatmap',this)">🗺 Thermal Heatmap</button>
+    <button class="tab" onclick="switchTab('ac',this)">❄ Smart AC Scheduler</button>
+  </div>
+
+  <!-- ========== HEATMAP PANEL ========== -->
+  <div id="panel-heatmap" class="panel active">
+
+    <div class="page-header">
+      <h1>Campus Heat Distribution - Live Sensor Map</h1>
+      <p>Real-time temperature readings across <strong>24 campus zones</strong>. Green zones are thermally efficient; red zones need immediate intervention. <strong>Tree-shaded zones (🌿) are consistently 1.5 to 2.5 degrees cooler</strong> with zero energy cost.</p>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric">
+        <div class="label">Avg Campus Temp</div>
+        <div class="val" id="avg-temp">--</div>
+        <div class="sub">Measured now</div>
+      </div>
+      <div class="metric">
+        <div class="label">Coolest Zone</div>
+        <div class="val" id="cool-zone">--</div>
+        <div class="sub" id="cool-val">--</div>
+      </div>
+      <div class="metric hot">
+        <div class="label">Hottest Zone</div>
+        <div class="val" id="hot-zone">--</div>
+        <div class="sub" id="hot-val">--</div>
+      </div>
+      <div class="metric">
+        <div class="label">Active Sensors</div>
+        <div class="val">74</div>
+        <div class="sub">All online</div>
+      </div>
+    </div>
+
+    <div class="heatmap-controls">
+      <div class="legend">
+        <span>Cool</span>
+        <div class="leg-bar">
+          <div class="leg-seg" style="background:#5DCAA5"></div>
+          <div class="leg-seg" style="background:#97C459"></div>
+          <div class="leg-seg" style="background:#EF9F27"></div>
+          <div class="leg-seg" style="background:#D85A30"></div>
+          <div class="leg-seg" style="background:#A32D2D"></div>
+        </div>
+        <span>Hot</span>
+      </div>
+      <button class="refresh-btn" onclick="simulateTick()">Refresh Readings</button>
+    </div>
+
+    <div class="heatmap-grid" id="heatmap-grid"></div>
+    <div class="heatmap-hint">Click any zone to see details. Tree-shaded zones marked with 🌿</div>
+  </div>
+
+  <!-- ========== AC SCHEDULER PANEL ========== -->
+  <div id="panel-ac" class="panel">
+
+    <div class="page-header">
+      <h2 style="font-family:'Lora',serif;font-size:22px;font-weight:700;color:#FFFDF8;margin-bottom:6px;">AI-Powered AC Optimisation - 1 Day Energy Analysis</h2>
+      <p>Identifies wasted cooling, empty-room losses, and daily savings if the smart schedule is followed. <strong>Drag the time slider</strong> to simulate any hour of the campus day.</p>
+    </div>
+
+    <div class="time-row">
+      <label>Simulated Time</label>
+      <span class="clock" id="sim-clock">10:00</span>
+      <input type="range" min="6" max="23" step="0.25" value="10" id="time-slider" oninput="updateTime(this.value)">
+      <span class="time-label-pill" id="time-label">Morning Lecture</span>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric">
+        <div class="label">ACs Running</div>
+        <div class="val" id="ac-running">--</div>
+        <div class="sub">of 18 total units</div>
+      </div>
+      <div class="metric warn">
+        <div class="label">Empty Rooms with AC On</div>
+        <div class="val" id="ac-waste">--</div>
+        <div class="sub" id="ac-waste-sub">Wasted cooling</div>
+      </div>
+      <div class="metric warn">
+        <div class="label">Est. Energy Waste</div>
+        <div class="val" id="energy-waste">--</div>
+        <div class="sub">This hour</div>
+      </div>
+      <div class="metric">
+        <div class="label">Daily Savings Potential</div>
+        <div class="val" id="daily-save">--</div>
+        <div class="sub">If optimised</div>
+      </div>
+    </div>
+
+    <!-- AC TABLE -->
+    <div class="table-wrap">
+      <table class="ac-table">
+        <thead><tr>
+          <th>Zone</th>
+          <th>Temp</th>
+          <th>Occupancy</th>
+          <th>AC Status</th>
+          <th>AI Recommendation</th>
+        </tr></thead>
+        <tbody id="ac-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="rec-box">
+      <div class="rec-title">AI Insights for Current Time</div>
+      <div id="rec-list"></div>
+      <div class="score-section">
+        <div class="score-row">
+          <span class="s-label">Today's Optimisation Score</span>
+          <span class="s-val" id="score-label">--</span>
+        </div>
+        <div class="savings-bar">
+          <div class="savings-fill" id="score-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 24HR CHART -->
+    <div class="chart-section">
+      <div class="chart-title">24-Hour Energy Waste Profile (Estimated kWh per Hour)</div>
+      <div class="bar-chart" id="bar-chart"></div>
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:#FF7055"></span>Peak waste hours (11:00 - 16:00)</span>
+        <span><span class="legend-dot" style="background:#4CAF7D"></span>Normal</span>
+        <span><span class="legend-dot" style="background:#2A6044"></span>Low usage</span>
+      </div>
+    </div>
+
+    <!-- DAY SUMMARY -->
+    <div class="day-summary">
+      <div class="day-summary-title">📊 Full Day Summary - IITGN Campus</div>
+      <div class="day-stats">
+        <div class="day-stat">
+          <span class="ds-val warn" id="ds-waste">--</span>
+          <div class="ds-label">Estimated Daily Energy Waste (kWh)</div>
+        </div>
+        <div class="day-stat">
+          <span class="ds-val" id="ds-saving">--</span>
+          <div class="ds-label">Potential Daily Savings (INR)</div>
+        </div>
+        <div class="day-stat">
+          <span class="ds-val hot" id="ds-co2">--</span>
+          <div class="ds-label">CO2 Avoidable per Day (kg)</div>
+        </div>
+        <div class="day-stat">
+          <span class="ds-val" id="ds-trees">--</span>
+          <div class="ds-label">Equivalent Trees Planted</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end panel-ac -->
+</div><!-- end main-wrap -->
 
 <div class="tooltip" id="tooltip"></div>
 
@@ -131,101 +819,15 @@ const buildings = [
   {id:'Dubven-F1',type:'hostel',floor:1,x:6,y:1,w:1,shaded:false,baseTemp:28.2,occupied:[0,1,2,3,4,5,6,7,20,21,22,23]},
   {id:'Hostel-F2',type:'hostel',floor:2,x:7,y:1,w:1,shaded:false,baseTemp:29.6,occupied:[0,1,2,3,4,5,22,23]},
   {id:'Dubven-F3',type:'hostel',floor:3,x:8,y:1,w:1,shaded:false,baseTemp:31.2,occupied:[0,1,2,22,23]},
-  {id:'Hostel-F3',type:'hostel',floor:3,x:9,y:1,w:1,shaded:false,baseTemp:31.0,occupied:[0,1,2,22,23]},
+  {id:'Hostel-F3b',type:'hostel',floor:3,x:9,y:1,w:1,shaded:false,baseTemp:31.0,occupied:[0,1,2,22,23]},
   {id:'Sports',type:'sports',floor:1,x:0,y:2,w:2,shaded:true,baseTemp:27.0,occupied:[6,7,17,18,19,20]},
   {id:'Workshop',type:'lab',floor:1,x:2,y:2,w:2,shaded:false,baseTemp:29.8,occupied:[9,10,11,14,15,16]},
   {id:'Lab-A',type:'lab',floor:1,x:4,y:2,w:1,shaded:false,baseTemp:28.5,occupied:[9,10,11,14,15]},
   {id:'Lab-B',type:'lab',floor:1,x:5,y:2,w:1,shaded:false,baseTemp:28.3,occupied:[14,15,16,17]},
   {id:'Admin',type:'admin',floor:1,x:6,y:2,w:2,shaded:false,baseTemp:29.0,occupied:[9,10,11,12,14,15,16,17]},
   {id:'Medical',type:'other',floor:1,x:8,y:2,w:1,shaded:true,baseTemp:26.5,occupied:[9,10,11,12,14,15,16]},
-  {id:'Open plaza',type:'outdoor',floor:0,x:9,y:2,w:1,shaded:false,baseTemp:33.0,occupied:[]},
+  {id:'Open Plaza',type:'outdoor',floor:0,x:9,y:2,w:1,shaded:false,baseTemp:33.0,occupied:[]},
 ];
-
-let temps = {};
-function getTemp(b,noise=true){
-  const hour=simHour;
-  let t=b.baseTemp;
-  if(hour>=11&&hour<=16)t+=1.5;
-  else if(hour>=8&&hour<=10)t+=0.5;
-  else if(hour<=6||hour>=22)t-=2;
-  if(b.floor===2)t+=0.8;
-  if(b.floor===3)t+=1.8;
-  if(b.shaded)t-=1.5;
-  if(noise)t+=((Math.random()-0.5)*0.6);
-  return Math.round(t*10)/10;
-}
-
-function tempColor(t){
-  if(t<=26.5)return{bg:'#5DCAA5',text:'#085041'};
-  if(t<=27.5)return{bg:'#97C459',text:'#173404'};
-  if(t<=28.5)return{bg:'#EF9F27',text:'#412402'};
-  if(t<=30)return{bg:'#D85A30',text:'#4A1B0C'};
-  return{bg:'#A32D2D',text:'#FCEBEB'};
-}
-
-let simHour=10;
-function updateTime(v){
-  simHour=parseFloat(v);
-  const h=Math.floor(simHour);
-  const m=simHour%1===0?'00':'30';
-  document.getElementById('sim-clock').textContent=`${h.toString().padStart(2,'0')}:${m}`;
-  const labels=['Early morning','Morning lecture','Mid-morning','Lunch break','Afternoon','Evening','Night'];
-  const li=simHour<8?0:simHour<10?1:simHour<12?2:simHour<14?3:simHour<18?4:simHour<21?5:6;
-  document.getElementById('time-label').textContent=labels[li];
-  renderAC();
-  simulateTick();
-}
-
-function simulateTick(){
-  buildings.forEach(b=>{temps[b.id]=getTemp(b);});
-  renderHeatmap();
-  updateMetrics();
-}
-
-function renderHeatmap(){
-  const grid=document.getElementById('heatmap-grid');
-  grid.innerHTML='';
-  buildings.forEach(b=>{
-    const t=temps[b.id]||getTemp(b,false);
-    const c=tempColor(t);
-    const cell=document.createElement('div');
-    cell.className='cell';
-    cell.style.gridColumn=`span ${b.w}`;
-    cell.style.background=c.bg;
-    cell.style.color=c.text;
-    cell.innerHTML=`<div class="cname">${b.shaded?'🌿 ':' '}${b.id}</div><div class="ctemp">${t.toFixed(1)}°</div>`;
-    cell.onmouseenter=(e)=>showTooltip(e,b,t);
-    cell.onmouseleave=()=>{document.getElementById('tooltip').style.display='none'};
-    grid.appendChild(cell);
-  });
-  updateMetrics();
-}
-
-function showTooltip(e,b,t){
-  const tip=document.getElementById('tooltip');
-  const isOcc=b.occupied.includes(Math.floor(simHour));
-  tip.innerHTML=`<strong style="font-size:13px">${b.id}</strong><br>
-    <span style="color:var(--color-text-secondary)">Type:</span> ${b.type}<br>
-    <span style="color:var(--color-text-secondary)">Temp:</span> ${t.toFixed(1)}°C<br>
-    <span style="color:var(--color-text-secondary)">Floor:</span> ${b.floor>0?b.floor:'Ground'}<br>
-    <span style="color:var(--color-text-secondary)">Shaded:</span> ${b.shaded?'Yes (trees)':'No'}<br>
-    <span style="color:var(--color-text-secondary)">Now occupied:</span> ${isOcc?'Yes':'No'}`;
-  tip.style.display='block';
-  tip.style.left=(e.clientX+12)+'px';
-  tip.style.top=(e.clientY-10)+'px';
-}
-
-function updateMetrics(){
-  const ts=buildings.map(b=>temps[b.id]||getTemp(b,false));
-  const avg=ts.reduce((a,b)=>a+b,0)/ts.length;
-  document.getElementById('avg-temp').textContent=avg.toFixed(1)+'°C';
-  const minT=Math.min(...ts),maxT=Math.max(...ts);
-  const minB=buildings[ts.indexOf(minT)],maxB=buildings[ts.indexOf(maxT)];
-  document.getElementById('cool-zone').textContent=minB.id;
-  document.getElementById('cool-val').textContent=minT.toFixed(1)+'°C'+(minB.shaded?' — near trees':'');
-  document.getElementById('hot-zone').textContent=maxB.id;
-  document.getElementById('hot-val').textContent=maxT.toFixed(1)+'°C';
-}
 
 const acZones=[
   {id:'AB-8 CR1',type:'academic',shaded:true,baseTemp:26.0,schedule:[8,9,10,11,14,15,16]},
@@ -248,72 +850,226 @@ const acZones=[
   {id:'Medical',type:'other',shaded:true,baseTemp:26.5,schedule:[9,10,11,12,14,15,16]},
 ];
 
+let temps = {};
+let simHour = 10;
+
+function getTemp(b, noise=true){
+  const h = simHour;
+  let t = b.baseTemp;
+  if(h>=11 && h<=16) t += 1.5;
+  else if(h>=8 && h<=10) t += 0.5;
+  else if(h<=6 || h>=22) t -= 2;
+  if(b.floor===2) t += 0.8;
+  if(b.floor===3) t += 1.8;
+  if(b.shaded) t -= 1.5;
+  if(noise) t += ((Math.random()-0.5)*0.6);
+  return Math.round(t*10)/10;
+}
+
+function tempColor(t){
+  if(t<=26.5) return {bg:'#5DCAA5', text:'#052D1E'};
+  if(t<=27.5) return {bg:'#97C459', text:'#142600'};
+  if(t<=28.5) return {bg:'#EF9F27', text:'#2A1500'};
+  if(t<=30)   return {bg:'#D85A30', text:'#350E00'};
+  return {bg:'#A32D2D', text:'#FFE0E0'};
+}
+
+function simulateTick(){
+  buildings.forEach(b => { temps[b.id] = getTemp(b); });
+  renderHeatmap();
+  updateMetrics();
+}
+
+function renderHeatmap(){
+  const grid = document.getElementById('heatmap-grid');
+  grid.innerHTML = '';
+  buildings.forEach(b => {
+    const t = temps[b.id] || getTemp(b, false);
+    const c = tempColor(t);
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.style.gridColumn = `span ${b.w}`;
+    cell.style.background = c.bg;
+    cell.style.color = c.text;
+    cell.innerHTML = `<div class="cname">${b.shaded ? '🌿 ' : ''}${b.id}</div><div class="ctemp">${t.toFixed(1)}°C</div>`;
+    cell.onmouseenter = (e) => showTooltip(e, b, t);
+    cell.onmouseleave = () => { document.getElementById('tooltip').style.display='none'; };
+    grid.appendChild(cell);
+  });
+}
+
+function showTooltip(e, b, t){
+  const tip = document.getElementById('tooltip');
+  const isOcc = b.occupied.includes(Math.floor(simHour));
+  tip.innerHTML = `<strong style="font-size:14px;color:var(--green-bright)">${b.id}</strong><br>
+    <span style="color:var(--text-muted)">Type:</span> ${b.type}<br>
+    <span style="color:var(--text-muted)">Temp:</span> <strong>${t.toFixed(1)}°C</strong><br>
+    <span style="color:var(--text-muted)">Floor:</span> ${b.floor>0?b.floor:'Ground'}<br>
+    <span style="color:var(--text-muted)">Shaded:</span> ${b.shaded?'Yes (trees)':'No'}<br>
+    <span style="color:var(--text-muted)">Occupied:</span> ${isOcc?'<span style="color:#6FCF97">Yes</span>':'<span style="color:#FF8060">No</span>'}`;
+  tip.style.display='block';
+  tip.style.left=(e.clientX+14)+'px';
+  tip.style.top=(e.clientY-10)+'px';
+}
+
+function updateMetrics(){
+  const ts = buildings.map(b => temps[b.id] || getTemp(b,false));
+  const avg = ts.reduce((a,b)=>a+b,0)/ts.length;
+  document.getElementById('avg-temp').textContent = avg.toFixed(1)+'°C';
+  const minT=Math.min(...ts), maxT=Math.max(...ts);
+  const minB=buildings[ts.indexOf(minT)], maxB=buildings[ts.indexOf(maxT)];
+  document.getElementById('cool-zone').textContent = minB.id;
+  document.getElementById('cool-val').textContent = minT.toFixed(1)+'°C'+(minB.shaded?' - near trees':'');
+  document.getElementById('hot-zone').textContent = maxB.id;
+  document.getElementById('hot-val').textContent = maxT.toFixed(1)+'°C - no shade';
+
+  // update insight banner
+  const waste = calcWaste(Math.floor(simHour));
+  const rupees = Math.round(waste * 8 * 24);
+  document.getElementById('insight-text').textContent =
+    `Campus now ${avg.toFixed(1)}°C avg. ${waste > 0 ? waste + ' rooms wasting energy right now - estimated INR ' + rupees + ' avoidable daily.' : 'All systems optimised.'}`;
+}
+
+function calcWaste(h){
+  return acZones.filter(z=>{
+    const t = z.baseTemp + (h>=11&&h<=16?1.5:h>=8&&h<=10?0.5:h<=6||h>=22?-2:0) - (z.shaded?1.5:0);
+    const acOn = t>27 || z.type==='hostel';
+    const occ = z.schedule.includes(h);
+    return acOn && !occ && z.type!=='hostel';
+  }).length;
+}
+
+function updateTime(v){
+  simHour = parseFloat(v);
+  const h = Math.floor(simHour);
+  const m = simHour%1===0?'00':'30';
+  document.getElementById('sim-clock').textContent = `${h.toString().padStart(2,'0')}:${m}`;
+  const labels = ['Early Morning','Morning Lecture','Mid-Morning','Lunch Break','Afternoon','Evening','Night'];
+  const li = simHour<8?0:simHour<10?1:simHour<12?2:simHour<14?3:simHour<18?4:simHour<21?5:6;
+  document.getElementById('time-label').textContent = labels[li];
+  renderAC();
+  simulateTick();
+}
+
 function renderAC(){
-  const h=Math.floor(simHour);
-  const tbody=document.getElementById('ac-tbody');
-  tbody.innerHTML='';
-  let running=0,waste=0,wasteKwh=0;
+  const h = Math.floor(simHour);
+  const tbody = document.getElementById('ac-tbody');
+  tbody.innerHTML = '';
+  let running=0, waste=0, wasteKwh=0;
 
-  acZones.forEach(z=>{
-    const occupied=z.schedule.includes(h);
-    let t=z.baseTemp;
-    if(h>=11&&h<=16)t+=1.5;else if(h>=8&&h<=10)t+=0.5;else if(h<=6||h>=22)t-=2;
-    if(z.shaded)t-=1.5;
-    t=Math.round(t*10)/10;
-    const acOn=t>27||z.type==='hostel';
-    const isWaste=acOn&&!occupied&&z.type!=='hostel';
-    if(acOn)running++;
-    if(isWaste){waste++;wasteKwh+=1.4;}
-    
-    let rec,recClass;
-    if(z.shaded&&t<27){rec='Turn off AC — passive cooling sufficient';recClass='badge-ok'}
-    else if(isWaste){rec='Turn off — room unoccupied';recClass='badge-warn'}
-    else if(occupied&&t>30){rec='Increase cooling to 24°C';recClass='badge-hot'}
-    else if(occupied&&t>28){rec='Set to 25°C — optimal comfort';recClass='badge-cool'}
-    else if(!occupied){rec='Keep off until scheduled use';recClass='badge-off'}
-    else{rec='Maintain current setting';recClass='badge-ok'}
+  acZones.forEach(z => {
+    const occupied = z.schedule.includes(h);
+    let t = z.baseTemp;
+    if(h>=11&&h<=16) t+=1.5;
+    else if(h>=8&&h<=10) t+=0.5;
+    else if(h<=6||h>=22) t-=2;
+    if(z.shaded) t-=1.5;
+    t = Math.round(t*10)/10;
+    const acOn = t>27 || z.type==='hostel';
+    const isWaste = acOn && !occupied && z.type!=='hostel';
+    if(acOn) running++;
+    if(isWaste){ waste++; wasteKwh+=1.4; }
 
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${z.id}${z.shaded?' 🌿':''}</td>
-      <td>${t.toFixed(1)}°C</td>
+    let rec, recClass;
+    if(z.shaded && t<27){ rec='Turn off AC - passive cooling sufficient'; recClass='badge-ok'; }
+    else if(isWaste){ rec='Turn off - room unoccupied'; recClass='badge-warn'; }
+    else if(occupied && t>30){ rec='Increase cooling to 24 deg C'; recClass='badge-hot'; }
+    else if(occupied && t>28){ rec='Set to 25 deg C - optimal comfort'; recClass='badge-cool'; }
+    else if(!occupied){ rec='Keep off until scheduled use'; recClass='badge-off'; }
+    else{ rec='Maintain current setting'; recClass='badge-ok'; }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${z.id}</strong>${z.shaded?' 🌿':''}</td>
+      <td><strong>${t.toFixed(1)}°C</strong></td>
       <td><span class="badge ${occupied?'badge-ok':'badge-off'}">${occupied?'Occupied':'Empty'}</span></td>
-      <td><span class="badge ${acOn?'badge-cool':'badge-off'}">${acOn?'Running':'Off'}</span>${isWaste?'<span class="badge badge-warn" style="margin-left:4px">Waste</span>':''}</td>
-      <td style="color:var(--color-text-secondary)">${rec}</td>`;
+      <td><span class="badge ${acOn?'badge-cool':'badge-off'}">${acOn?'Running':'Off'}</span>${isWaste?'<span class="badge badge-warn" style="margin-left:6px">Waste</span>':''}</td>
+      <td style="color:var(--text-muted)">${rec}</td>`;
     tbody.appendChild(tr);
   });
 
-  document.getElementById('ac-running').textContent=running;
-  document.getElementById('ac-waste').textContent=waste;
-  document.getElementById('ac-waste-sub').textContent=waste>0?`${(waste*1.4).toFixed(1)} kWh wasted`:'No waste detected';
-  document.getElementById('energy-waste').textContent=wasteKwh.toFixed(1)+' kWh';
-  const rupees=Math.round(wasteKwh*24*8);
-  document.getElementById('daily-save').textContent='₹'+rupees;
+  document.getElementById('ac-running').textContent = running;
+  document.getElementById('ac-waste').textContent = waste;
+  document.getElementById('ac-waste-sub').textContent = waste>0?`${(waste*1.4).toFixed(1)} kWh wasted`:'No waste detected';
+  document.getElementById('energy-waste').textContent = wasteKwh.toFixed(1)+' kWh';
+  const rupees = Math.round(wasteKwh*24*8);
+  document.getElementById('daily-save').textContent = 'INR '+rupees;
 
-  const score=Math.round(100-((waste/acZones.length)*100));
-  document.getElementById('score-label').textContent=score+'%';
-  document.getElementById('score-bar').style.width=score+'%';
+  const score = Math.round(100-((waste/acZones.length)*100));
+  document.getElementById('score-label').textContent = score+'%';
+  document.getElementById('score-bar').style.width = score+'%';
 
-  const recs=[];
-  if(waste>0)recs.push({dot:'dot-warn',text:`${waste} room${waste>1?'s':''} have AC running with no occupancy — estimated ₹${Math.round(wasteKwh*8*24)} daily loss`});
-  const shadedOn=acZones.filter(z=>z.shaded&&(z.baseTemp+(h>=11&&h<=16?1.5:0)-1.5)<27);
-  if(shadedOn.length)recs.push({dot:'dot-save',text:`${shadedOn.length} shaded zone${shadedOn.length>1?'s':''} (like AB-8) are below 27°C — AC not needed, open windows instead`});
-  if(h>=11&&h<=14)recs.push({dot:'dot-hot',text:'Peak solar hours — raise AC setpoint to 26°C (not 22°C) to reduce load while maintaining comfort'});
-  if(h>=22||h<=6)recs.push({dot:'dot-save',text:'Night-time — ambient temp drops 2–3°C. Pre-cool rooms at 23:00 and shut off by 01:00'});
-  if(!recs.length)recs.push({dot:'dot-save',text:'All systems optimised for current occupancy schedule'});
+  const recs = [];
+  if(waste>0) recs.push({dot:'dot-warn',text:`${waste} room${waste>1?'s':''} have AC running with no occupancy - estimated INR ${Math.round(wasteKwh*8*24)} daily loss if unaddressed`});
+  const shadedCool = acZones.filter(z => z.shaded && (z.baseTemp+(h>=11&&h<=16?1.5:0)-1.5)<27);
+  if(shadedCool.length) recs.push({dot:'dot-save',text:`${shadedCool.length} shaded zone${shadedCool.length>1?'s':''} like AB-8 are below 27 deg C. AC not needed - open windows instead for free cooling`});
+  if(h>=11&&h<=14) recs.push({dot:'dot-hot',text:'Peak solar hours. Raise AC setpoint to 26 deg C instead of 22 deg C to reduce load while maintaining comfort'});
+  if(h>=22||h<=6) recs.push({dot:'dot-save',text:'Night-time: ambient temp drops 2 to 3 deg C. Pre-cool rooms at 23:00 and shut off by 01:00 for maximum efficiency'});
+  if(!recs.length) recs.push({dot:'dot-save',text:'All systems optimised for current occupancy schedule. Good job!'});
 
-  const rl=document.getElementById('rec-list');
-  rl.innerHTML=recs.map(r=>`<div class="rec-item"><div class="rec-dot ${r.dot}"></div><div style="font-size:12px;color:var(--color-text-primary)">${r.text}</div></div>`).join('');
+  document.getElementById('rec-list').innerHTML = recs.map(r =>
+    `<div class="rec-item"><div class="rec-dot ${r.dot}"></div><div>${r.text}</div></div>`
+  ).join('');
+
+  renderDayChart();
+  renderDaySummary();
 }
 
-function switchTab(name){
+function renderDayChart(){
+  const chart = document.getElementById('bar-chart');
+  chart.innerHTML = '';
+  const curH = Math.floor(simHour);
+  for(let hr=6; hr<=23; hr++){
+    const wasteCount = acZones.filter(z=>{
+      const t2 = z.baseTemp + (hr>=11&&hr<=16?1.5:hr>=8&&hr<=10?0.5:hr<=6||hr>=22?-2:0) - (z.shaded?1.5:0);
+      const acOn = t2>27 || z.type==='hostel';
+      const occ = z.schedule.includes(hr);
+      return acOn && !occ && z.type!=='hostel';
+    }).length;
+    const kwh = wasteCount * 1.4;
+    const maxKwh = 8;
+    const chartHeight = 118; const barPx = Math.max(4, Math.round((kwh / maxKwh) * chartHeight));
+    const isPeak = hr>=11 && hr<=16;
+    const isLow = hr<=7 || hr>=21;
+    const isCurrent = hr===curH;
+    const col = document.createElement('div');
+    col.className = `bar-col ${isPeak?'peak':isLow?'low':'normal'}${isCurrent?' current-hour':''}`;
+    col.title = `${hr}:00 - ${kwh.toFixed(1)} kWh waste`;
+    col.innerHTML = `<div class="bar" style="height:${barPx}px"></div><div class="bar-label">${hr}</div>`;
+    chart.appendChild(col);
+  }
+}
+
+function renderDaySummary(){
+  let totalWaste=0;
+  for(let hr=6; hr<=23; hr++){
+    acZones.forEach(z=>{
+      const t2 = z.baseTemp+(hr>=11&&hr<=16?1.5:hr>=8&&hr<=10?0.5:hr<=6||hr>=22?-2:0)-(z.shaded?1.5:0);
+      const acOn = t2>27||z.type==='hostel';
+      const occ = z.schedule.includes(hr);
+      if(acOn&&!occ&&z.type!=='hostel') totalWaste+=1.4;
+    });
+  }
+  const saving = Math.round(totalWaste*8);
+  const co2 = (totalWaste*0.82).toFixed(1);
+  const trees = Math.round(totalWaste*0.82/21.77);
+  document.getElementById('ds-waste').textContent = totalWaste.toFixed(0)+' kWh';
+  document.getElementById('ds-saving').textContent = 'INR '+saving;
+  document.getElementById('ds-co2').textContent = co2+' kg';
+  document.getElementById('ds-trees').textContent = trees+' trees/yr equiv.';
+}
+
+function switchTab(name, btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  event.target.classList.add('active');
+  btn.classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
 }
 
+// init
 simulateTick();
 renderAC();
-setInterval(simulateTick,8000);
+setInterval(simulateTick, 8000);
 </script>
+</body>
+</html>
